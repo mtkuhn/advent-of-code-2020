@@ -9,7 +9,7 @@ fun main() {
     val entries = File("src/main/resources/day1_input.csv").readLines().stream()
             .map{ it.toInt() }
             .collect(Collectors.toList())
-    //todo: there's probably a lot of room for optimization at this point
+
     val firstResult: Int? = entries.firstOrNull {
         entries.minusElement(it).contains(total - it)
     }
