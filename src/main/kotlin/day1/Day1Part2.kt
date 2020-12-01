@@ -47,8 +47,10 @@ data class ExpenseValueCandidateTracker(val selectedCandidates: List<Int>, val r
     fun expandExpenseValueCandidatesSelections(total: Int): List<ExpenseValueCandidateTracker> {
         return this.remainingCandidates
             .filter { selectedCandidates.sum() + it <= total }
-            .map {
-                ExpenseValueCandidateTracker(selectedCandidates+it, remainingCandidates.minus(it))
+            .run {
+                this.map {
+                    ExpenseValueCandidateTracker(selectedCandidates+it, this.minus(it))
+                }
             }
     }
 
