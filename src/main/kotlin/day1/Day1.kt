@@ -1,14 +1,12 @@
 package day1
 
 import java.io.File
-import java.util.stream.Collectors
 
 fun main() {
 
     val total = 2020
-    val entries = File("src/main/resources/day1_input.csv").readLines().stream()
+    val entries = File("src/main/resources/day1_input.csv").readLines()
             .map{ it.toInt() }
-            .collect(Collectors.toList())
 
     val firstResult: Int? = entries.firstOrNull {
         entries.minusElement(it).contains(total - it)

@@ -1,7 +1,6 @@
 package day1
 
 import java.io.File
-import java.util.stream.Collectors
 
 fun main() {
 
@@ -30,10 +29,9 @@ fun main() {
  * Grab the hard-coded input file.
  */
 fun getSortedInput(): List<Int> {
-    return File("src/main/resources/day1_input.csv").readLines().stream()
+    return File("src/main/resources/day1_input.csv").readLines()
         .map{ it.toInt() }
         .sorted()
-        .collect(Collectors.toList())
 }
 
 /**
