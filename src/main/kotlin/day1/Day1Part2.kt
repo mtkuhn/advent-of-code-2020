@@ -8,10 +8,12 @@ fun main() {
     val total = 2020
     val numberOfValuesToFind = 3
 
-    var candidates = listOf(ExpenseValueCandidateTracker(emptyList(), getInput()))
+    var candidates = listOf(ExpenseValueCandidateTracker(emptyList(), getSortedInput()))
     repeat(numberOfValuesToFind) {
         candidates = candidates.flatMap { it.expandExpenseValueCandidatesSelections(total) }
+        println("Number of candidates after ${it+1} expansions: ${candidates.size}")
     }
+    println("All solutions: ${candidates.filter { it.selectedCandidates.sum() == total }.map { it.selectedCandidates }}")
     val matchingCandidate = candidates.firstOrNull { it.selectedCandidates.sum() == total }
 
     if(matchingCandidate == null) {
@@ -27,15 +29,17 @@ fun main() {
 /**
  * Grab the hard-coded input file.
  */
-fun getInput(): List<Int> {
+fun getSortedInput(): List<Int> {
     return File("src/main/resources/day1_input.csv").readLines().stream()
         .map{ it.toInt() }
+        .sorted()
         .collect(Collectors.toList())
 }
 
 /**
  * This is essentially a node is a search tree of values. It tracks the possible selections we've made vs the remaining
  * values to chose from.
+ * Note: Requires sorted input.
  */
 data class ExpenseValueCandidateTracker(val selectedCandidates: List<Int>, val remainingCandidates: List<Int>) {
 
@@ -46,6 +50,7 @@ data class ExpenseValueCandidateTracker(val selectedCandidates: List<Int>, val r
      */
     fun expandExpenseValueCandidatesSelections(total: Int): List<ExpenseValueCandidateTracker> {
         return this.remainingCandidates
+            .filter { it >= selectedCandidates.maxOrNull()?:0 }
             .filter { selectedCandidates.sum() + it <= total }
             .run {
                 this.map {
