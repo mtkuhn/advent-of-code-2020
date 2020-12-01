@@ -9,9 +9,9 @@ fun main() {
     val numberOfValuesToFind = 3
 
     var candidates = listOf(ExpenseValueCandidateTracker(emptyList(), getSortedInput()))
-    repeat(numberOfValuesToFind) {
+    repeat(numberOfValuesToFind) { index ->
         candidates = candidates.flatMap { it.expandExpenseValueCandidatesSelections(total) }
-        println("Number of candidates after ${it+1} expansions: ${candidates.size}")
+        println("Number of candidates after ${index+1} expansions: ${candidates.size}")
     }
     println("All solutions: ${candidates.filter { it.selectedCandidates.sum() == total }.map { it.selectedCandidates }}")
     val matchingCandidate = candidates.firstOrNull { it.selectedCandidates.sum() == total }
