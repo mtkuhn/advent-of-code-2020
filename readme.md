@@ -16,3 +16,10 @@ I could run this for 4 values that sum to 2020, though no solution exists in tha
 It works by iteratively doing a breadth-wise expansion of options, 
 filtering out impossibilities as it goes. There are likely faster ways to traverse the
 tree, but this works well enough for the given dataset.
+
+## Day 2
+### Part 1
+There's only a few steps here:
+1. Parse the line into usable values. For readability, I opted to parse each line into a data 
+class and stored the min and max as an IntRange.
+2. Validate each parsed line. This was a simple comparison of the char count to the IntRange.
