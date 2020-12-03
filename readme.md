@@ -29,3 +29,13 @@ My part 1 design fit with this fairly well. I opted to refactor the data class
 slightly to use a min and max value rather than range, as it makes usage for part 2
 more clear. Other than that I simply had to update my evaluation function to use
 the data differently.
+
+## Day 3
+### Part 1
+Like the other puzzles, this can be solved easily with streams.
+I first convert the data into a 2d array. 
+I could have left it as a list of strings, but this just felt right.
+
+Then I did an indexed map to take each line at a time, moving 3 positions for each line.
+I mod the index by the width of the input to effectively loop it around rather than go off the edge.
+Finally, I take a count of '#' characters found.
