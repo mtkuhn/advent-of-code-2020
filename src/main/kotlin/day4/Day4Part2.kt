@@ -8,8 +8,7 @@ fun main() {
             .readLines()
             .fold(mutableListOf("")) { list, line  ->
                 if(line.isBlank()) list.add("")
-                if(list.last().isBlank()) list[list.lastIndex] += line
-                else list[list.lastIndex] += " $line"
+                else list[list.lastIndex] += (if(list.last().isBlank()) "" else " ")+line
                 list
             }
             .map { passport ->
