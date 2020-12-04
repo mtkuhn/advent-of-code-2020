@@ -3,7 +3,7 @@ Matt Kuhn 2020
 <br>Implemented in Kotlin
 <hr>
 
-| Day | Doc | Source |
+| AoC Day | Explanation | Source Code |
 |-----|-----|--------|
 | [1](https://adventofcode.com/2020/day/1) | [doc](/doc/day1.md) | [source](/src/main/kotlin/day1) |
 | [2](https://adventofcode.com/2020/day/2) | [doc](/doc/day2.md) | [source](/src/main/kotlin/day2) |
