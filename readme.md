@@ -40,9 +40,36 @@ Then I did an indexed map to take each line at a time, moving 3 positions for ea
 I mod the index by the width of the input to effectively loop it around rather than go off the edge.
 Finally, I take a count of '#' characters found.
 
-###Part 2
+### Part 2
 To solve for different down amounts in the slope was simple, I just filtered out rows using a mod on the index.
 
-I refactored the tree calculation into it's own function so that I could iterate over a list of slopes.
+I refactored the tree calculation into its own function so that I could iterate over a list of slopes.
 
-Finally, I used a reduce to calculate the product. I had some issues here as I initially got overflow and had to conver to BigInt.
+Finally, I used a `reduce` to calculate the product. I had some issues here as I initially got overflow and had to convert to BigInt.
+(Later I realized `Long` was enough.)
+
+## Day 4
+### Part 1
+The hardest part of this for me was figuring out how to parse the input data.
+The fact that passwords could be spread across multiple lines meant that I needed
+to combine those lines in a meaningful way. I came up with this:
+
+    .fold(mutableListOf("")) { list, line  ->
+        if(line.isBlank()) list.add("")
+        if(list.last().isBlank()) list[list.lastIndex] += line
+        else list[list.lastIndex] += " $line"
+        list
+    }
+
+`fold` is much like `reduce`, except that in this case I can give it an intial value
+for the accumulator. By making the accumulator a `List` I can selectively fold each new
+element into either the last list item or as a new list item.
+
+Once I had the data sorted per passport, it was a simple matter of creating a map of
+values and checking for their existence.
+
+### Part 2
+
+All that was needed here was to add some additional validation. For some multi-step
+validations I created extension functions on `String`. Most validation was done
+using regex.
