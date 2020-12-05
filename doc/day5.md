@@ -1,4 +1,5 @@
 # Day 5: Binary Boarding.
+[view source](/src/main/kotlin/day5/Day5.kt)
 ## Part 1
 ### Problem
 Using input encoded using binary space partitioning, determine the seat locations.
