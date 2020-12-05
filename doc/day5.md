@@ -17,3 +17,28 @@ fun String.findBinaryPartitionValue(maxValue: Int, highChar: Char): Int =
     }
 ```
 With this function, it's just some simple mapping and aggregate function to get our solution.
+
+## Part 2
+### Problem
+Find your seat number by process of elimination. 
+Yours is the one missing in the input. Some seats won't exist, but ids `-1` and `+1` from yours will exist.
+### Solution
+I maybe could have brute-forced this by generating a list of valid ids and subtracting the known seats, but
+I thought I'd go for something more performant. In the end I did the following:
+1. Find all known seats and ids
+2. Find rows that did not have all 8 columns filled
+3. For the incomplete rows, determine the missing seat data
+4. Filter missing seat candidates by checking the id before and after
+
+```
+val missingSeats = knownSeats.groupBy { it.row }
+        .filter { it.value.size < 8 }
+        .map { rowMapEntry -> rowMapEntry.key to (0..7)-rowMapEntry.value.map { it.col }.toList() }
+        .flatMap { mapEntry ->
+            mapEntry.second.map {
+                Seat.fromPosition(mapEntry.first, it)
+            }
+        }.filter {
+            knownSeatIds.contains(it.id+1) && knownSeatIds.contains(it.id-1)
+        }
+```
