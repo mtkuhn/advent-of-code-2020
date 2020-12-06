@@ -19,3 +19,26 @@ finding the size of each set, and summing the total:
             .sum()
             .apply { println(this) }
 ```
+
+## Part 2
+### Problem
+Same as above, but now instead of unique characters in the input we want
+to know which characters are the same between lines in the same group.
+### Solution
+The operation we want here is an `intersection`, which returns
+the elements which are shared between two sets. For read-ability
+I opted to create an extension function to handle the intersection of a
+list of strings.
+```
+fun List<String>.intersectAll(): Set<Char> =
+        this.map { it.toSet() }.reduce { acc, element -> acc intersect element }
+```
+Using this, the mapping and aggregate functions can be updated as such:
+```
+    File("src/main/resources/day6_input.txt").readLines()
+            .foldToBlankLineSeparated("\n")
+            .map { group -> group.split("\n").intersectAll() }
+            .map { it.toSet().size }
+            .sum()
+            .apply { println(this) }
+```
