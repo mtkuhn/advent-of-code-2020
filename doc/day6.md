@@ -1,4 +1,4 @@
-# Day 5: Custom Customs
+# Day 6: Custom Customs
 [view source](/src/main/kotlin/day6/Day6.kt)
 ## Part 1
 ### Problem
