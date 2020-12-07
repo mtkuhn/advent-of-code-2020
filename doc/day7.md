@@ -20,7 +20,6 @@ a data class with clear variable names and a method it can use to convert input.
 data class BagRule(val color: String, val contents: List<Pair<Int, String>>) {
     companion object {
         fun fromString(input: String): BagRule {
-            println(input)
             val split = input.split(" bags contain ")
             val subjectColor = split[0]
             val containedBags = split[1].split(", ".toRegex()).toList()
