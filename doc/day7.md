@@ -57,7 +57,7 @@ This makes it easy to invoke for our initial color and run a count.
 
 ## Part 2
 ### Problem
-Using the same rules, find the number of bags required to be carried within a `siny gold bag`.
+Using the same rules, find the number of bags required to be carried within a `shiny gold bag`.
 ### Solution
 This time we need to traverse the rules in the opposite direction. Luckily I already included
 the number of bags! Again I'm going with a recursive approach. We find the rule for the given
