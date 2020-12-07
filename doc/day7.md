@@ -47,3 +47,32 @@ fun List<BagRule>.findContainingBagColors(evalColor: String): Set<String> {
 }
 ```
 This makes it easy to invoke for our initial color and run a count.
+```
+    File("src/main/resources/day7_input.txt").readLines()
+            .map { BagRule.fromString(it) }
+            .findContainingBagColors("shiny gold")
+            .count()
+            .apply { println(this) }
+```
+
+## Part 2
+### Problem
+Using the same rules, find the number of bags required to be carried within a `siny gold bag`.
+### Solution
+This time we need to traverse the rules in the opposite direction. Luckily I already included
+the number of bags! Again I'm going with a recursive approach. We find the rule for the given
+color, then multiply the number of bags for each contained color.
+```
+fun List<BagRule>.countBagsContainedBy(evalColor: String): Int =
+        this.find { r -> r.color == evalColor }
+            ?.contents
+                ?.map { it.first*(this.countBagsContainedBy(it.second)+1) }
+                ?.sum()?:0
+```
+Which makes the main method simple:
+```
+    File("src/main/resources/day7_input.txt").readLines()
+            .map { BagRule.fromString(it) }
+            .countBagsContainedBy("shiny gold")
+            .apply { println(this) }
+```
