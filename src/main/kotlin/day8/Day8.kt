@@ -22,23 +22,20 @@ fun part2() {
 
     var program = Program(getInputAsMapOfInstructions()).apply { run(haltingInstructionHook) }
     while(program.state != ProgramState.COMPLETED) {
-        val alteredProgram = program.deepCopy()
-                .apply {
-                    replaceInstruction(program.currentLine, instructionConverter)
-                    run()
+        program = evalWithAlteredInstruction(program, instructionConverter)
+                ?:program.apply {
+                    markCurrentInstructionAsChecked()
+                    run(haltingInstructionHook)
                 }
-
-        program = if(alteredProgram.state == ProgramState.COMPLETED) {
-            alteredProgram
-        } else {
-            program.apply {
-                markCurrentInstructionAsChecked()
-                run(haltingInstructionHook)
-            }
-        }
     }
     println(program.accumulator)
 }
+
+fun evalWithAlteredInstruction(program: Program, instructionConverter: (Instruction) -> Instruction): Program? =
+    program.deepCopy().apply {
+        replaceInstruction(program.currentLine, instructionConverter)
+        run()
+    }.takeIf { it.state == ProgramState.COMPLETED}
 
 fun getInputAsMapOfInstructions() =
         File("src/main/resources/day8_input.txt").readLines()

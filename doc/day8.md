@@ -11,7 +11,7 @@ You are given a list of assembly-ish instructions with one arg and one of the fo
 
 >nop stands for No OPeration - it does nothing. The instruction immediately below it is executed next.
 
-Given the instruction input, find the value of the accumulator just before any instruction is executed more than once.
+Given the instruction input, find the value of the accumulator just before any instruction executed more than once.
 
 ### Solution
 
@@ -156,20 +156,11 @@ until an answer does arrive.
 ```
     var program = Program(getInputAsMapOfInstructions()).apply { run(haltingInstructionHook) }
     while(program.state != ProgramState.COMPLETED) {
-        val alteredProgram = program.deepCopy()
-                .apply {
-                    replaceInstruction(program.currentLine, instructionConverter)
-                    run()
+        program = evalWithAlteredInstruction(program, instructionConverter)
+                ?:program.apply {
+                    markCurrentInstructionAsChecked()
+                    run(haltingInstructionHook)
                 }
-
-        program = if(alteredProgram.state == ProgramState.COMPLETED) {
-            alteredProgram
-        } else {
-            program.apply {
-                markCurrentInstructionAsChecked()
-                run(haltingInstructionHook)
-            }
-        }
     }
     println(program.accumulator)
 ```
