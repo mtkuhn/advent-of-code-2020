@@ -120,16 +120,16 @@ class Program(private val instructions: MutableMap<Int, Instruction>,
     }
 ```
 
-You might also notice that I also added a hook that can help me out when we hit a `jmp` or `nop`.
+You might notice that I also added a hook that can help me out when we hit a `jmp` or `nop`.
 The gist is that we want to pause and mess with the data when he hit those. 
-There's a new property for `Instruction.isChecked`, this allows us to bypass the hook when
-necessary. Here's what it ends up being:
+I also snuck in a new property for `Instruction.isChecked`, this allows us to bypass the hook when
+necessary. Here's what the hook ends up being:
 ```
     val haltingInstructionHook: (Instruction) -> Boolean = { ins: Instruction ->
         !ins.isChecked && ins.operation in listOf("jmp", "nop")
     }
 ```
-Of course we need some class methods to manipulate the data, including a deep copy
+Now we need some class methods to manipulate the data, including a deep copy
 so that we don't mix up our results.
 ```
     fun deepCopy(): Program {
@@ -144,7 +144,7 @@ so that we don't mix up our results.
         }
     }
 ```
-And there's another high-order function involved in the above:
+And you may have noticed there's another high-order function involved in the above:
 ```
     val instructionConverter: (Instruction) -> Instruction = {
         it.copy(operation = if(it.operation == "jmp") "nop" else "jmp")
