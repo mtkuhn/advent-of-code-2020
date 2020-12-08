@@ -54,7 +54,10 @@ Then I only needed to loop over instructions.
 
 ```
     fun run() {
-        while(instructions[currentLine]?.invocationCount == 0) {
+        while(currentLine < instructions.size) {
+            if(instructions[currentLine]?.invocationCount != 0) {
+                break
+            }
             invokeInstruction(instructions[currentLine])
         }
     }
@@ -77,5 +80,96 @@ Then, simply run the program and grab the result!
 ```
     val program = Program(getInputAsMapOfInstructions())
     program.run()
+    println(program.accumulator)
+```
+
+## Part 2
+### Problem
+The program can be fixed not fall into an infinite loop by either changing one `jmp` to `nop`
+or one `nop` to `jmp`. Find the one instruction to change for the fix and print the value of the
+accumulator after it runs with this fix.
+### Solution
+Now it's getting interesting! The name of the game here is to programmatically alter the input and
+test it for full-completion vs infinite-loop. I'm also going to make a needless optimization and
+have it never repeat the full instruction set more than once.
+
+First I need to update my Program class with a `state` and define an enum for those states. It's
+now very important I know why it is that I'm stopping execution.
+```
+enum class ProgramState { COMPLETED, INFINITE_LOOP, HALTED }
+
+class Program(private val instructions: MutableMap<Int, Instruction>,
+              var state: ProgramState = ProgramState.HALTED,
+              var currentLine: Int = 0,
+              var accumulator: Int = 0) {
+
+    fun run(haltingInstructionHook: (Instruction) -> Boolean = { false }) {
+        while(currentLine < instructions.size) {
+            val ins = instructions[currentLine] ?: error("Invalid instruction at line $currentLine")
+            if(ins.isInvoked) {
+                state = ProgramState.INFINITE_LOOP
+                break
+            }
+            if(haltingInstructionHook.invoke(ins)) {
+                state = ProgramState.HALTED
+                break
+            }
+            invokeInstruction(ins)
+        }
+        if(currentLine == instructions.size) state = ProgramState.COMPLETED
+    }
+```
+
+You might also notice that I also added a hook that can help me out when we hit a `jmp` or `nop`.
+The gist is that we want to pause and mess with the data when he hit those. 
+There's a new property for `Instruction.isChecked`, this allows us to bypass the hook when
+necessary. Here's what it ends up being:
+```
+    val haltingInstructionHook: (Instruction) -> Boolean = { ins: Instruction ->
+        !ins.isChecked && ins.operation in listOf("jmp", "nop")
+    }
+```
+Of course we need some class methods to manipulate the data, including a deep copy
+so that we don't mix up our results.
+```
+    fun deepCopy(): Program {
+        val newInstructions = instructions.map { it.key to it.value.copy() }.toMap().toMutableMap()
+        return Program(newInstructions, this.state, this.currentLine, this.accumulator)
+    }
+
+    fun replaceInstruction(replaceLine: Int, instructionConverter: (Instruction) -> Instruction) {
+        val instructionToUpdate = instructions[replaceLine]
+        if(instructionToUpdate != null) {
+            instructions[replaceLine] = instructionConverter.invoke(instructionToUpdate)
+        }
+    }
+```
+And there's another high-order function involved in the above:
+```
+    val instructionConverter: (Instruction) -> Instruction = {
+        it.copy(operation = if(it.operation == "jmp") "nop" else "jmp")
+    }
+```
+Given this setup, we can now evaluate as result. I run until we halt (at a `jmp` or `nop`), then test a run
+against an altered instruction. If it runs to completion we have our answer, otherwise we move on and keep testing
+until an answer does arrive.
+```
+    var program = Program(getInputAsMapOfInstructions()).apply { run(haltingInstructionHook) }
+    while(program.state != ProgramState.COMPLETED) {
+        val alteredProgram = program.deepCopy()
+                .apply {
+                    replaceInstruction(program.currentLine, instructionConverter)
+                    run()
+                }
+
+        program = if(alteredProgram.state == ProgramState.COMPLETED) {
+            alteredProgram
+        } else {
+            program.apply {
+                markCurrentInstructionAsChecked()
+                run(haltingInstructionHook)
+            }
+        }
+    }
     println(program.accumulator)
 ```

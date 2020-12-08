@@ -3,7 +3,7 @@ package day8
 import java.io.File
 
 fun main() {
-    part1()
+    part2()
 }
 
 fun part1() {
@@ -12,26 +12,88 @@ fun part1() {
     println(program.accumulator)
 }
 
+fun part2() {
+    val haltingInstructionHook: (Instruction) -> Boolean = { ins: Instruction ->
+        !ins.isChecked && ins.operation in listOf("jmp", "nop")
+    }
+    val instructionConverter: (Instruction) -> Instruction = {
+        it.copy(operation = if(it.operation == "jmp") "nop" else "jmp")
+    }
+
+    var program = Program(getInputAsMapOfInstructions()).apply { run(haltingInstructionHook) }
+    while(program.state != ProgramState.COMPLETED) {
+        val alteredProgram = program.deepCopy()
+                .apply {
+                    replaceInstruction(program.currentLine, instructionConverter)
+                    run()
+                }
+
+        program = if(alteredProgram.state == ProgramState.COMPLETED) {
+            alteredProgram
+        } else {
+            program.apply {
+                markCurrentInstructionAsChecked()
+                run(haltingInstructionHook)
+            }
+        }
+    }
+    println(program.accumulator)
+}
+
 fun getInputAsMapOfInstructions() =
         File("src/main/resources/day8_input.txt").readLines()
                 .mapIndexed { idx, line ->
                     idx to Instruction(line.substringBefore(" "), line.substringAfter(" ").toInt())
-                }.toMap()
+                }.toMap().toMutableMap()
 
-data class Instruction(val operation: String, val argument: Int, var invocationCount: Int = 0)
+data class Instruction(val operation: String,
+                       val argument: Int,
+                       var isInvoked: Boolean = false,
+                       var isChecked: Boolean = false)
 
-class Program(val instructions: Map<Int, Instruction>, var currentLine: Int = 0, var accumulator: Int = 0) {
+enum class ProgramState { COMPLETED, INFINITE_LOOP, HALTED }
 
-    fun run() {
-        while(instructions[currentLine]?.invocationCount == 0) {
-            invokeInstruction(instructions[currentLine])
+class Program(private val instructions: MutableMap<Int, Instruction>,
+              var state: ProgramState = ProgramState.HALTED,
+              var currentLine: Int = 0,
+              var accumulator: Int = 0) {
+
+    fun run(haltingInstructionHook: (Instruction) -> Boolean = { false }) {
+        while(currentLine < instructions.size) {
+            val ins = instructions[currentLine] ?: error("Invalid instruction at line $currentLine")
+            if(ins.isInvoked) {
+                state = ProgramState.INFINITE_LOOP
+                break
+            }
+            if(haltingInstructionHook.invoke(ins)) {
+                state = ProgramState.HALTED
+                break
+            }
+            invokeInstruction(ins)
         }
+        if(currentLine == instructions.size) state = ProgramState.COMPLETED
+    }
+
+    fun deepCopy(): Program {
+        val newInstructions = instructions.map { it.key to it.value.copy() }.toMap().toMutableMap()
+        return Program(newInstructions, this.state, this.currentLine, this.accumulator)
+    }
+
+    fun replaceInstruction(replaceLine: Int, instructionConverter: (Instruction) -> Instruction) {
+        val instructionToUpdate = instructions[replaceLine]
+        if(instructionToUpdate != null) {
+            instructions[replaceLine] = instructionConverter.invoke(instructionToUpdate)
+        }
+    }
+
+    fun markCurrentInstructionAsChecked() {
+        instructions[currentLine]?.isChecked = true
     }
 
     private fun invokeInstruction(instruction: Instruction?): Instruction? {
         if(instruction == null) error("null instruction encountered")
 
-        instruction.invocationCount += 1
+        instruction.isInvoked = true
 
         return when(instruction.operation) {
             "nop" -> next()
