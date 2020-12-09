@@ -14,21 +14,17 @@ fun part1() {
                 pair.second.map { i -> pair.first-i }
                         .none() { pair.second.contains(it) }
             }
-            .apply { println(this?.first) } //776203571
+            .apply { println(this?.first) }
 }
 
 fun part2() {
     val goal: Long = 776203571
-    val consecutiveRunningTallies = File("src/main/resources/day9_input.txt").readLines()
+    File("src/main/resources/day9_input.txt").readLines()
             .map { it.toLong() }
             .map { RunningTally(it, mutableListOf(it)) }
-
-    var answer: RunningTally? = null
-    while(answer == null) {
-        answer = consecutiveRunningTallies.apply{ iterateRunningTally() }
-                .firstOrNull { it.total == goal }
-    }
-    println(answer.sumOfMinAndMax())
+            .apply { iterateRunningTally(goal) }
+            .firstOrNull { it.total == goal }
+            .apply { println(this?.sumOfMinAndMax()) }
 }
 
 data class RunningTally(var total: Long, private val values: MutableList<Long>) {
@@ -42,13 +38,17 @@ data class RunningTally(var total: Long, private val values: MutableList<Long>) 
     fun sumOfMinAndMax(): Long = (values.minOrNull()?:0) + (values.maxOrNull()?:0)
 }
 
-fun List<RunningTally>.iterateRunningTally() =
-    this.forEachIndexed { idx, element ->
-        if (idx + element.size() < this.size) element += this[idx + element.size()].first()
+fun List<RunningTally>.iterateRunningTally(goal: Long) =
+    (indices).takeWhile { _ ->
+        apply {
+            forEachIndexed { idx, element ->
+                if (idx + element.size() < size) element += this[idx + element.size()].first()
+            }
+        }.none { it.total == goal }
     }
 
 fun <T> List<T>.rollingSlicePairedToFinal(amount: Int): List<Pair<T, List<T>>> =
-    this.foldIndexed(mutableListOf<Pair<T, List<T>>>()) { idx, acc, _ ->
-        if(idx-amount+1 >= 0) acc += this[idx] to this.slice(idx-amount+1 until idx)
+    foldIndexed(mutableListOf<Pair<T, List<T>>>()) { idx, acc, _ ->
+        if(idx-amount+1 >= 0) acc += this[idx] to slice(idx-amount+1 until idx)
         acc
     }.toList()

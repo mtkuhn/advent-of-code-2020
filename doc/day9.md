@@ -9,8 +9,8 @@ I wanted to slice up by input in substring of length 25 to be evaluated, paired 
 our desired value. So I used my new favorite function of `fold`!
 ```
 fun <T> List<T>.rollingSlicePairedToFinal(amount: Int): List<Pair<T, List<T>>> =
-    this.foldIndexed(mutableListOf<Pair<T, List<T>>>()) { idx, acc, _ ->
-        if(idx-amount+1 >= 0) acc += this[idx] to this.slice(idx-amount+1..idx-1)
+    foldIndexed(mutableListOf<Pair<T, List<T>>>()) { idx, acc, _ ->
+        if(idx-amount+1 >= 0) acc += this[idx] to slice(idx-amount+1 until idx)
         acc
     }.toList()
 ```
@@ -26,4 +26,44 @@ in the sub-list.
                         .none() { pair.second.contains(it) }
             }
             .apply { println(this?.first) }
+```
+## Part 2
+### Problem
+Find two or more consecutive numbers (in the same input) that add up to the answer from part 2.
+### Solution
+My idea is to start with a list of our inputs, then add the input from adjacent index and loop until
+our desired value shows itself. To aid in tracking this running tally and it's components I
+first created a data class with some convenience functions.
+```
+data class RunningTally(var total: Long, private val values: MutableList<Long>) {
+    operator fun plusAssign(element: Long) {
+        this.values += element
+        total += element
+    }
+
+    fun first(): Long = values.first()
+    fun size(): Int = values.size
+    fun sumOfMinAndMax(): Long = (values.minOrNull()?:0) + (values.maxOrNull()?:0)
+}
+```
+Then I created an extension function to iterate on a `List<RunningTally>` until the goal is reached.
+```
+fun List<RunningTally>.iterateRunningTally(goal: Long) =
+    (indices).takeWhile { _ ->
+        apply {
+            forEachIndexed { idx, element ->
+                if (idx + element.size() < size) element += this[idx + element.size()].first()
+            }
+        }.none { it.total == goal }
+    }
+```
+So now we can initialize our base tallies, iterate them, and find the answer.
+```
+    val goal: Long = 776203571
+    File("src/main/resources/day9_input.txt").readLines()
+            .map { it.toLong() }
+            .map { RunningTally(it, mutableListOf(it)) }
+            .apply { iterateRunningTally(goal) }
+            .firstOrNull { it.total == goal }
+            .apply { println(this?.sumOfMinAndMax()) }
 ```
