@@ -49,7 +49,7 @@ data class RunningTally(var total: Long, private val values: MutableList<Long>) 
 Then I created an extension function to iterate on a `List<RunningTally>` until the goal is reached.
 ```
 fun List<RunningTally>.iterateRunningTally(goal: Long) =
-    (indices).takeWhile { _ ->
+    indices.takeWhile { _ ->
         apply {
             forEachIndexed { idx, element ->
                 if (idx + element.size() < size) element += this[idx + element.size()].first()
