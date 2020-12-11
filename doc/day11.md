@@ -1,5 +1,5 @@
 # Day 11: Seating System
-[view source](/src/main/kotlin/day10/Day10.kt)
+[view source](/src/main/kotlin/day11/Day11.kt)
 ## Part 1
 ### Problem
 Using a set of iterative rules that update seat occupancy, determine the count of occupied seats once the iterations
