@@ -8,18 +8,18 @@ fun main() {
 }
 
 fun part1() {
-    val input = Grid(File("src/main/resources/day11_input.txt").readLines())
+    val input = SeatingGrid(File("src/main/resources/day11_input.txt").readLines())
     input.runPart1()
     println(input.countOccupiedSeats()) //2346
 }
 
 fun part2() {
-    val input = Grid(File("src/main/resources/day11_input.txt").readLines())
+    val input = SeatingGrid(File("src/main/resources/day11_input.txt").readLines())
     input.runPart2()
     println(input.countOccupiedSeats()) //2111
 }
 
-class Grid(private var data: List<String>) {
+class SeatingGrid(private var data: List<String>) {
 
     private fun isInBounds(x: Int, y: Int): Boolean = x in (data.indices) && y in (data[0].indices)
 
