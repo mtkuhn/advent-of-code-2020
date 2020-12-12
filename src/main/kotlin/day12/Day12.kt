@@ -15,17 +15,25 @@ fun getInstructionFromFileInput(): List<Pair<Char, Long>> =
 
 operator fun Pair<Long, Long>.plus(pos: Pair<Long, Long>) = first+pos.first to second+pos.second
 operator fun Pair<Long, Long>.times(scale: Long) = first*scale to second*scale
+fun Pair<Long, Long>.distanceAndAngleToCoordinates(): Pair<Long, Long> =
+        when(this.second) {
+            NavigationState.NORTH -> this.first to 0L
+            NavigationState.SOUTH -> -this.first to 0L
+            NavigationState.EAST -> 0L to this.first
+            NavigationState.WEST -> 0L to -this.first
+            else -> error("Does not support anything other than cardinal directions: ${this.second}")
+        }
 
 fun part1() {
     NavigationState().apply {
         getInstructionFromFileInput().forEach {
             when(it.first) {
-                'N' -> moveShipInDirection(it.second, NavigationState.NORTH)
-                'E' -> moveShipInDirection(it.second, NavigationState.EAST)
-                'S' -> moveShipInDirection(it.second, NavigationState.SOUTH)
-                'W' -> moveShipInDirection(it.second, NavigationState.WEST)
-                'L' -> turnShipInDegrees(-it.second)
-                'R' -> turnShipInDegrees(it.second)
+                'N' -> moveShipByDistanceAndAngle(it.second, NavigationState.NORTH)
+                'E' -> moveShipByDistanceAndAngle(it.second, NavigationState.EAST)
+                'S' -> moveShipByDistanceAndAngle(it.second, NavigationState.SOUTH)
+                'W' -> moveShipByDistanceAndAngle(it.second, NavigationState.WEST)
+                'L' -> turnShip(-it.second)
+                'R' -> turnShip(it.second)
                 'F' -> moveShipInCurrentDirection(it.second)
                 else -> error("Unsupported operation: $it")
             }
@@ -57,24 +65,25 @@ class NavigationState(
         private var shipPosition: Pair<Long, Long> = 0L to 0L, //north to East
         private var waypointPosition: Pair<Long, Long> = 1L to 10L
 ) {
-    private fun polarToPosition(polar: Pair<Long, Long>): Pair<Long, Long> =
-            when(polar.second) {
-                NORTH -> polar.first to 0L
-                SOUTH -> -polar.first to 0L
-                EAST -> 0L to polar.first
-                WEST -> 0L to -polar.first
-                else -> error("Does not support anything other than cardinal directions: ${polar.second}")
-            }
 
-    fun moveShipInDirection(distance: Long, degrees: Long) { shipPosition += polarToPosition(distance to degrees) }
+    fun moveShipByDistanceAndAngle(distance: Long, degrees: Long) {
+        shipPosition += (distance to degrees).distanceAndAngleToCoordinates()
+    }
 
-    fun moveShipInCurrentDirection(distance: Long) = moveShipInDirection(distance, shipDirection)
+    fun moveShipInCurrentDirection(distance: Long) =
+            moveShipByDistanceAndAngle(distance, shipDirection)
 
-    fun turnShipInDegrees(degrees: Long) { shipDirection = Math.floorMod(shipDirection + degrees, 360L) }
+    fun turnShip(degrees: Long) {
+        shipDirection = Math.floorMod(shipDirection + degrees, 360L)
+    }
 
-    fun moveWaypointInDirection(distance: Long, degrees: Long) { waypointPosition += polarToPosition(distance to degrees) }
+    fun moveWaypointInDirection(distance: Long, degrees: Long) {
+        waypointPosition += (distance to degrees).distanceAndAngleToCoordinates()
+    }
 
-    fun moveShipTowardWaypoint(scale: Long) { shipPosition += waypointPosition*scale }
+    fun moveShipTowardWaypoint(scale: Long) {
+        shipPosition += waypointPosition*scale
+    }
 
     fun rotateWaypointAroundShip(degrees: Long) {
         waypointPosition = when(Math.floorMod(degrees, 360)) {
@@ -86,7 +95,8 @@ class NavigationState(
         }
     }
 
-    fun manhattanDistance(): Long = abs(shipPosition.first) + abs(shipPosition.second)
+    fun manhattanDistance(): Long =
+            abs(shipPosition.first) + abs(shipPosition.second)
 
     companion object {
         const val EAST: Long = 0L
