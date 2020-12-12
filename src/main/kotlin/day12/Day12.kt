@@ -13,14 +13,19 @@ fun getInstructionFromFileInput(): List<Pair<Char, Long>> =
         File("src/main/resources/day12_input.txt").readLines()
                 .map { it[0] to it.substring(1).toLong() }
 
+const val EAST: Long = 0L
+const val SOUTH: Long = 90L
+const val WEST: Long = 180L
+const val NORTH: Long = 270L
+
 operator fun Pair<Long, Long>.plus(pos: Pair<Long, Long>) = first+pos.first to second+pos.second
 operator fun Pair<Long, Long>.times(scale: Long) = first*scale to second*scale
 fun Pair<Long, Long>.distanceAndAngleToCoordinates(): Pair<Long, Long> =
         when(this.second) {
-            NavigationState.NORTH -> this.first to 0L
-            NavigationState.SOUTH -> -this.first to 0L
-            NavigationState.EAST -> 0L to this.first
-            NavigationState.WEST -> 0L to -this.first
+            NORTH -> this.first to 0L
+            SOUTH -> -this.first to 0L
+            EAST -> 0L to this.first
+            WEST -> 0L to -this.first
             else -> error("Does not support anything other than cardinal directions: ${this.second}")
         }
 
@@ -28,10 +33,10 @@ fun part1() {
     NavigationState().apply {
         getInstructionFromFileInput().forEach {
             when(it.first) {
-                'N' -> moveShipByDistanceAndAngle(it.second, NavigationState.NORTH)
-                'E' -> moveShipByDistanceAndAngle(it.second, NavigationState.EAST)
-                'S' -> moveShipByDistanceAndAngle(it.second, NavigationState.SOUTH)
-                'W' -> moveShipByDistanceAndAngle(it.second, NavigationState.WEST)
+                'N' -> moveShipByDistanceAndAngle(it.second, NORTH)
+                'E' -> moveShipByDistanceAndAngle(it.second, EAST)
+                'S' -> moveShipByDistanceAndAngle(it.second, SOUTH)
+                'W' -> moveShipByDistanceAndAngle(it.second, WEST)
                 'L' -> turnShip(-it.second)
                 'R' -> turnShip(it.second)
                 'F' -> moveShipInCurrentDirection(it.second)
@@ -46,10 +51,10 @@ fun part2() {
     NavigationState().apply {
         getInstructionFromFileInput().forEach {
             when(it.first) {
-                'N' -> moveWaypointInDirection(it.second, NavigationState.NORTH)
-                'E' -> moveWaypointInDirection(it.second, NavigationState.EAST)
-                'S' -> moveWaypointInDirection(it.second, NavigationState.SOUTH)
-                'W' -> moveWaypointInDirection(it.second, NavigationState.WEST)
+                'N' -> moveWaypointInDirection(it.second, NORTH)
+                'E' -> moveWaypointInDirection(it.second, EAST)
+                'S' -> moveWaypointInDirection(it.second, SOUTH)
+                'W' -> moveWaypointInDirection(it.second, WEST)
                 'L' -> rotateWaypointAroundShip(-it.second)
                 'R' -> rotateWaypointAroundShip(it.second)
                 'F' -> moveShipTowardWaypoint(it.second)
@@ -98,10 +103,4 @@ class NavigationState(
     fun manhattanDistance(): Long =
             abs(shipPosition.first) + abs(shipPosition.second)
 
-    companion object {
-        const val EAST: Long = 0L
-        const val SOUTH: Long = 90L
-        const val WEST: Long = 180L
-        const val NORTH: Long = 270L
-    }
 }
