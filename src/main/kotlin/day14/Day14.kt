@@ -1,6 +1,7 @@
 package day14
 
 import java.io.File
+import kotlin.math.pow
 
 fun main() {
     part1()
@@ -12,17 +13,13 @@ fun getInput(): List<String> =
 
 fun part1() {
     var mask = 0L to 0L
-    var memoryMap = mutableMapOf<Long, Long>()
+    val memoryMap = mutableMapOf<Long, Long>()
     getInput().map { it.split(" = ") }
             .forEach { s ->
-                if(s[0] == "mask") {
-                    mask = (s[1].replace("X", "0").toLong(2)
-                            to s[1].replace("X", "1").toLong(2))
-                }
-                else {
-                    val addr = "mem\\[([0-9]+)\\]".toRegex().find(s[0])?.groupValues?.get(1)?.toLong()?:-1
-                    memoryMap[addr] = s[1].toLong() or mask.first and mask.second
-                }
+                if(s[0] == "mask") mask = (s[1].replace("X", "0").toLong(2)
+                        to s[1].replace("X", "1").toLong(2))
+                else memoryMap[getMemoryInstructionPosition(s[0])] =
+                        s[1].toLong() or mask.first and mask.second
             }
 
     memoryMap.values.sum().apply { println(this) }
@@ -30,40 +27,36 @@ fun part1() {
 
 fun part2() {
     var mask = 0L.toString(2)
-    var memoryMap = mutableMapOf<Long, Long>()
+    val memoryMap = mutableMapOf<Long, Long>()
     getInput().map { it.split(" = ") }
             .forEach { s ->
-                if(s[0] == "mask") {
-                    mask = s[1]
-                }
-                else {
-                    val addr = "mem\\[([0-9]+)\\]".toRegex().find(s[0])
-                            ?.groupValues?.get(1)?.toLong()?:-1
-                    decodeMemoryAddress(mask, addr).forEach() { a ->
-                        memoryMap[a] = s[1].toLong()
-                    }
-
-                }
+                if(s[0] == "mask") mask = s[1]
+                else decodeMemoryAddress(mask, getMemoryInstructionPosition(s[0]))
+                        .forEach { a -> memoryMap[a] = s[1].toLong() }
             }
 
     memoryMap.values.sum().apply { println(this) }
-}
+} //4463708436768
 
-fun decodeMemoryAddress(mask: String, addr: Long): List<Long> {
-    val addresses = mutableListOf(mask.replace("X", "0").toLong(2) or addr)
+fun getMemoryInstructionPosition(instructionString: String): Long =
+        "mem\\[([0-9]+)]".toRegex().find(instructionString)?.groupValues?.get(1)?.toLong()?:-1
+
+fun decodeMemoryAddress(mask: String, address: Long): List<Long> {
+    val addresses = mutableListOf(mask.replace("X", "0").toLong(2) or address)
     mask.mapIndexedNotNull { idx, char -> if(char == 'X') idx else null }
             .forEach { i ->
-                addresses.addAll(addresses.map { address -> flipBitAt(address, i) })
+                addresses.addAll(addresses.map { address -> flipBitFromLeft(address, 36-i) })
             }
     return addresses.toList()
 }
 
-fun flipBitAt(address: Long, i: Int): Long {
-    var addressBits = address.toString(2)
-    repeat(36-addressBits.length) { addressBits = "0$addressBits" } //pad with 0s
-    val charReplacement = if(addressBits[i] == '1') '0' else '1' //flip the bit
-    val newStr = addressBits.slice(0 until i)+charReplacement+
-            addressBits.slice(i+1 until addressBits.length) //piece together
-    return newStr.toLong(2)  //as long
+fun getBitFromLeft(address: Long, i: Int): Boolean =
+        (address shr i-1) and 1L == 1L
+
+fun flipBitFromLeft(address: Long, i: Int): Long {
+    val diff = (2.0).pow(i-1).toLong()
+    val existingBit = getBitFromLeft(address, i)
+    return if(existingBit) address - diff else address + diff
 }
+
 
