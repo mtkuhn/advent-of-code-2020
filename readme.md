@@ -1,7 +1,17 @@
 # Advent of Code
 Matt Kuhn 2020
 <br>Implemented in Kotlin
-<hr>
+
+```
+                    *
+                   / \
+                  / . \
+                 / J . \
+                / . J  .\
+               / J .   J \
+              /_____ _____\
+                    |
+```
 
 | AoC Day | Explanation | Source Code |
 |-----|-----|--------|
@@ -19,3 +29,4 @@ Matt Kuhn 2020
 | [12](https://adventofcode.com/2020/day/12) | [doc](/doc/day12.md) | [source](/src/main/kotlin/day12) |
 | [13](https://adventofcode.com/2020/day/13) | [doc](/doc/day13.md) | [source](/src/main/kotlin/day13) |
 | [14](https://adventofcode.com/2020/day/14) | [doc](/doc/day14.md) | [source](/src/main/kotlin/day14) |
+| [15](https://adventofcode.com/2020/day/15) | [doc](/doc/day15.md) | [source](/src/main/kotlin/day15) |
