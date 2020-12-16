@@ -71,7 +71,7 @@ The possible fields per index are those for which all tickets meet the ranges.
                 }.toMutableList()
             }.apply { println(this.map { it.second.size }) }.toMutableList()
 ```
-Now we can loop through the possibilities looking for anything that has only once possibility.
+Now we can loop through the possibilities looking for anything that has only one possibility.
 Any such indexes are then moved to known list, and removed from the list of possibilities on
 all indexes. As we reduce the possibilities on each index, more will become known on the
 next loop.
