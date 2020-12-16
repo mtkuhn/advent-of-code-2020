@@ -30,3 +30,4 @@ Matt Kuhn 2020
 | [13](https://adventofcode.com/2020/day/13) | [doc](/doc/day13.md) | [source](/src/main/kotlin/day13) |
 | [14](https://adventofcode.com/2020/day/14) | [doc](/doc/day14.md) | [source](/src/main/kotlin/day14) |
 | [15](https://adventofcode.com/2020/day/15) | [doc](/doc/day15.md) | [source](/src/main/kotlin/day15) |
+| [16](https://adventofcode.com/2020/day/16) | [doc](/doc/day16.md) | [source](/src/main/kotlin/day16) |
