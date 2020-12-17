@@ -3,7 +3,7 @@
 ## Problem
 Given the nature of parts 1 and 2, I'm listing both first.
 ### Part 1
-With an input that is a plane in agrid of activated vs unactivated cubes in
+With an input that is a plane in a grid of activated vs unactivated cubes in
 3-dimensional space, apply a set of rules 6 times and count the new
 number of activated cubes.
 The rules are:
