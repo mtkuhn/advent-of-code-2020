@@ -11,23 +11,16 @@ fun part1() {
             .map { it.toRule() }
             .associateBy { it.id }
             .toMutableMap()
-    //val printRule = 132
-    //rules[printRule]?.print()
     while(rules.any { it.value is HigherLevelRule }) {
         rules.forEach {
             val rule = it.value
             if(rule is HigherLevelRule) rules[it.key] = rule.flattenRule(rules)
         }
-        //rules[printRule]?.print()
     }
     val acceptableMessages = rules.values.flatMap { (it as ConstantRule).options }
-    getMessages().count().apply { println(this) }
     getMessages().filter { message ->
         acceptableMessages.contains(message)
     }.count().apply { println(this) }
-
-
-    //272 too high
 }
 
 fun getRules() = File("src/main/resources/day19_rules.txt").readLines()
