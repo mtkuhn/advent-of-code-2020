@@ -7,89 +7,91 @@ fun main() {
     part2()
 }
 
-data class HalfExpression(var left: Long, var operation: Char)
-
-fun String.evaluateWithNoOrderOfOperations(): Long {
-    val stack = mutableListOf<HalfExpression>()
-    var currentExpression = HalfExpression(0L, '+')
-    this.forEach { char ->
-        if(char.isDigit()) applyOperation(currentExpression, char.toString().toLong())
-        else if(char == '*' || char == '+') currentExpression.operation = char
-        else if(char == '(') {
-            stack += currentExpression
-            currentExpression = HalfExpression(0L, '+')
-        }
-        else if(char == ')') currentExpression = applyOperation(stack.removeLast(), currentExpression.left)
-    }
-    return currentExpression.left
-}
-
-fun String.evalAllParenthesisOld() {
-    " \\([^)]+\\) ".toRegex().replace(this) {
-        val cleaned = it.value.trim()
-        cleaned.evaluateWithOrderOfOperations()
-    }
-}
-
-fun String.evalAllParenthesis(): String {
-    var s = this
-    while(s.contains("(")) {
-        var openCount = 1
-        var startPos = s.indexOf("(")
-        var pos = startPos
-        while(openCount != 0 && startPos < s.length) {
-            pos++
-            if(s[pos] == '(') openCount++
-            if(s[pos] == ')') openCount--
-        }
-        val contents = " ${s.substring(startPos+1 until pos)} "
-        val before = s.substring(0 until startPos-1)
-        val after = s.substring(pos+2)
-        s = before+contents.evaluateWithOrderOfOperations()+after
-    }
-    return s
-}
-
-fun String.evalOperations(operator: Char, operation: (Long, Long) -> Long): String {
-    var r = this
-    while(r.trim().any { it == operator }) {
-        r = r.iterateOperations(operator, operation)
-    }
-    return r
-}
-
-fun String.iterateOperations(operator: Char, operation: (Long, Long) -> Long): String =
-        " \\d+ [$operator] \\d+ ".toRegex().replace(this) {
-            val a = it.value.substringBefore(operator).trim().toLong()
-            val b = it.value.substringAfter(operator).trim().toLong()
-            " ${operation.invoke(a, b)} "
-        }
-
-fun String.evaluateWithOrderOfOperations(): String {
-    return evalAllParenthesis()
-            .evalOperations('+') { a, b -> a + b }
-            .evalOperations('*') { a, b -> a * b }
-}
-
-fun applyOperation(expression: HalfExpression, rightValue: Long): HalfExpression {
-    when(expression.operation) {
-        '+' -> expression.left += rightValue
-        '*' -> expression.left *= rightValue
-    }
-    return expression
-}
-
 fun part1() {
     File("src/main/resources/day18_input.txt").readLines()
-            .map { it.evaluateWithNoOrderOfOperations() }
-            .sum()
-            .apply { println(this) }
+            .standardizeExpressionInput()
+            .map { it.toMutableList().parseOperations() }
+            .map { it.evaluateLeftToRight() }
+            .sum().apply { println(this) }
 } //69490582260
 
 fun part2() {
     File("src/main/resources/day18_input.txt").readLines()
-            .map { " $it "}
-            .map { it.evaluateWithOrderOfOperations().trim().toLong() }
-            .sum()
-            .apply { println(this) }
+            .standardizeExpressionInput()
+            .map { it.toMutableList().parseOperations() }
+            .map { it.evaluateAdditionFirst() }
+            .sum().apply { println(this) }
 } //362464596624526
+
+interface Operand {
+    fun evaluateLeftToRight(): Long
+    fun evaluateAdditionFirst(): Long
+}
+data class Constant(val amount: Long): Operand {
+    override fun evaluateLeftToRight(): Long = amount
+    override fun evaluateAdditionFirst(): Long = amount
+}
+data class Expression(val operations: MutableList<Operation>): Operand {
+    override fun evaluateLeftToRight(): Long =
+            operations.fold(0L) { acc, op ->
+                when (op) {
+                    is Addition -> acc+op.operand.evaluateLeftToRight()
+                    is Multiplication -> acc*op.operand.evaluateLeftToRight()
+                    else -> error("Unknown operation")
+                }
+            }
+
+    override fun evaluateAdditionFirst(): Long  =
+            operations
+                    .fold(mutableListOf<MutableList<Operation>>(mutableListOf())) { acc, operation ->
+                        if(operation is Addition) acc.last() += operation
+                        else acc += mutableListOf(operation)
+                        acc
+                    }
+                    .flatMap { opList ->
+                        mutableListOf(Multiplication(Constant(
+                                opList.fold(0L) { acc, op -> acc+op.operand.evaluateAdditionFirst() })))
+                    }
+                    .fold(1L) { acc, op -> acc*op.operand.evaluateAdditionFirst() }
+}
+
+open class Operation(val operand: Operand)
+class Addition(operand: Operand): Operation(operand)
+class Multiplication(operand: Operand): Operation(operand)
+
+//strip out spaces, ensure everything starts with an operator (implied to be a +)
+fun List<String>.standardizeExpressionInput() =
+        this.map { it.replace(" ", "") }
+                .map { "+$it" }
+                .map { "[^+*][\\d]+".toRegex().replace(it) { mr -> "${mr.value.take(1)}+${mr.value.drop(1)}" } }
+                .map { "[^+*]\\(+".toRegex().replace(it) { mr -> "${mr.value.take(1)}+${mr.value.drop(1)}" } }
+
+fun MutableList<Char>.parseOperations(): Expression {
+    val operations = mutableListOf<Operation>()
+    while(this.isNotEmpty()) {
+        operations += removeAndTakeOperation()
+    }
+    return Expression(operations)
+}
+
+fun MutableList<Char>.removeAndTakeExpression(): Expression {
+    var openParentheses = 1
+    val expressionString = this.drop(1).takeWhile { char ->
+        if(char == '(') openParentheses++
+        else if(char == ')') openParentheses--
+        openParentheses != 0
+    }.joinToString(separator = "")
+    repeat(expressionString.length+2) { this.removeFirst() }
+    return expressionString.toMutableList().parseOperations()
+}
+
+fun MutableList<Char>.removeAndTakeOperation(): Operation {
+    val operator = this.removeFirst()
+    val operand =
+            when {
+                this.first().isDigit() -> Constant(this.removeFirst().toString().toLong())
+                this.first() == '(' -> this.removeAndTakeExpression()
+                else -> error("Unexpected syntax in ${this.joinToString(separator = "")}")
+            }
+    return if(operator == '+') Addition(operand) else Multiplication(operand)
+}
