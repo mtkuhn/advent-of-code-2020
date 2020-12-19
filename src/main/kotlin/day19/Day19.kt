@@ -7,10 +7,7 @@ fun main() {
 }
 
 fun part1() {
-    val rules = File("src/main/resources/day19_rules.txt").readLines()
-            .map { it.toRule() }
-            .associateBy { it.id }
-            .toMutableMap()
+    val rules = getRules()
     while(rules.any { it.value is HigherLevelRule }) {
         rules.forEach {
             val rule = it.value
@@ -43,17 +40,15 @@ class HigherLevelRule(id: Int, val options: List<List<Int>>): Rule(id) {
         else this
     }
 
-    private fun List<List<String>>.buildOptionStrings(): List<String> {
-        val options = mutableListOf<String>()
-        return if(this.size == 1) this.first()
-        else this.drop(1).buildOptionStrings().flatMap { enum ->
-            this.first().map { opt ->
-                opt + enum
+    private fun List<List<String>>.buildOptionStrings(): List<String> =
+            if(this.size == 1) this.first()
+            else this.drop(1).buildOptionStrings().flatMap { enum ->
+                this.first().map { opt ->
+                    opt + enum
+                }
             }
-        }
-    }
 
-    fun canFlattenToConstant(ruleMap: Map<Int, Rule>) = options.flatten().all { ruleMap[it] is ConstantRule }
+    private fun canFlattenToConstant(ruleMap: Map<Int, Rule>) = options.flatten().all { ruleMap[it] is ConstantRule }
 }
 class ConstantRule(id: Int, val options: List<String>): Rule(id)
 
