@@ -27,14 +27,12 @@ fun part1b() {
 
 fun part2b() {
     val rules = getRuleMap().toMutableMap()
-    //rules[8] = "8: 42 | 42 8".parseRule().second
-    //rules[11] = "11: 42 31 | 42 11 31".parseRule().second
-
     rules[8] = "((42)+)"
-    
+
     var rule11 = (1..100).map {
         "((42){$it}(31){$it})"
     }.joinToString(separator = "|", prefix="(", postfix= ")")
+    println(rule11)
     rules[11] = rule11
 
     while(rules.values.any { it.contains("\\(\\d+\\)".toRegex()) }) {
@@ -42,7 +40,10 @@ fun part2b() {
             "\\(\\d+\\)".toRegex().findAll(ruleMapEntry.value)
                     .map { it.value }
                     .forEach { foundNumber ->
-                        val intNumber = foundNumber.replace("[^\\d]".toRegex(), "").toInt()
+                        val intNumber = foundNumber.replace("[()]".toRegex(), "").toInt()
+                        if(rules[intNumber] == null) {
+                            println("$intNumber; $foundNumber; $ruleMapEntry")
+                        }
                         val replacement = rules[intNumber]!!.drop(1).dropLast(1)
                         rules[ruleMapEntry.key] = ruleMapEntry.value.replace(foundNumber, "($replacement)")
                     }
@@ -76,3 +77,9 @@ fun countMatchingMessages(ruleMap: Map<Int, String>): Int =
                     ruleMap.any { rule -> rule.value.toRegex().matches(line) }
                 }
                 .count()
+
+fun getUnmatchedMessages(ruleMap: Map<Int, String>): List<String> =
+        File("src/main/resources/day19_input.txt").readLines()
+                .filter { line ->
+                    ruleMap.none { rule -> rule.value.toRegex().matches(line) }
+                }
