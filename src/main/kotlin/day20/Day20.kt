@@ -4,6 +4,7 @@ import java.io.File
 
 fun main() {
     part1()
+    part2()
 }
 
 enum class Direction {
@@ -36,16 +37,27 @@ fun part1() {
     }
 
     tileGrids.first().print()
-    //tileGrids.first().getCornerIds().apply { println(this) }
-    //tileGrids.forEach { it.productOfCornerIds().apply { it.validate(tiles); println("corner product: $this") } }
     tileGrids.first().productOfCornerIds().apply { println("corner product: $this") }
     //3221,2029,1447,1873 -> 17712468069479
 
     tileGrids.first().toBigPicture().forEach { println(it) }
     tileGrids.forEach {
-       val c = countSeaMonsters(it.toBigPicture())
+        val c = countSeaMonsters(it.toBigPicture())
         println("monster count = $c")
     }
+}
+
+fun part2() {
+    val bigTiles = Tile("0", File("src/main/resources/day20_bigpic.txt").readLines()).getAllOrientations()
+
+    bigTiles.forEach {
+        val c = countSeaMonsters(it.grid)
+        println("monster count = $c")
+    }
+
+    bigTiles.first().grid.map { s ->
+        s.count { it == '#' }
+    }.sum().apply { println(this) }
 }
 
 fun findPossibleSolutionsForPosition(tileGrid: TileGrid, tiles: List<Tile>, x: Int, y: Int): List<TileGrid> {

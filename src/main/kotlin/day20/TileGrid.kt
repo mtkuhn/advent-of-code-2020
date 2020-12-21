@@ -59,10 +59,12 @@ class TileGrid(val gridList: Array<Array<Tile?>>) {
     }
 
     fun toBigPicture(): List<String> =
-            gridList.flatMap { rowTiles ->
-                (0 until 10).map { rowNum ->
-                    rowTiles.map { t ->
-                            t?.getRow(rowNum)?:"-----------"
+            gridList.flatMapIndexed { tileRowNum, tileRow ->
+                (0 until if(tileRowNum == gridList.lastIndex) 10 else 9).map { inTileRow -> //skip last row, except at end
+                    tileRow.mapIndexed { tileColNum, tile ->
+                        val str = tile!!.getRow(inTileRow)
+                        if(tileColNum != tileRow.lastIndex) str.dropLast(1)
+                        else str
                     }.joinToString(separator = "")
                 }
             }
