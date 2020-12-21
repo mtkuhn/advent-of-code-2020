@@ -39,7 +39,7 @@ class TileGrid(val gridList: Array<Array<Tile?>>) {
 
     fun productOfCornerIds(): Long =
         (this[0,0]?.id?.toLong()?:0L)*(this[0,11]?.id?.toLong()?:0L)*
-                (this[0,0]?.id?.toLong()?:0L)*(this[11,11]?.id?.toLong()?:0L)
+                (this[11,0]?.id?.toLong()?:0L)*(this[11,11]?.id?.toLong()?:0L)
 
     fun print() {
         println("-".repeat(133))
@@ -57,6 +57,15 @@ class TileGrid(val gridList: Array<Array<Tile?>>) {
             println("-".repeat(133))
         }
     }
+
+    fun toBigPicture(): List<String> =
+            gridList.flatMap { rowTiles ->
+                (0 until 10).map { rowNum ->
+                    rowTiles.map { t ->
+                            t?.getRow(rowNum)?:"-----------"
+                    }.joinToString(separator = "")
+                }
+            }
 
     fun validate(tiles: List<Tile>): Boolean {
         val ids = this.gridList.flatten()
