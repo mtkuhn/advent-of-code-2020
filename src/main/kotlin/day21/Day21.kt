@@ -5,9 +5,7 @@ import java.io.File
 fun main() {
     val foods = File("src/main/resources/day21_input.txt").readLines()
             .map { FoodItem.fromInputString(it) }
-
     val ingredients = foods.flatMap { it.ingredients }.toSet()
-
     val confirmedAllergens = mutableMapOf<String, String>()
     val allergenToPossibleIngredients = foods.flatMap { it.markedAllergens }.toSet()
             .map { it to ingredients }.toMap().toMutableMap() //prime map with all foods
@@ -46,6 +44,8 @@ fun main() {
     }.sum()
 
     println(appearances)
+
+    confirmedAllergens.toSortedMap().values.joinToString(separator=",").apply { println(this) }
 }
 
 data class FoodItem(val ingredients: Set<String>, val markedAllergens: Set<String>) {
