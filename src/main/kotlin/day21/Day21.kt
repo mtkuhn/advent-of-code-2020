@@ -46,6 +46,8 @@ fun main() {
     }.sum()
 
     println(appearances)
+
+    confirmedAllergens.toSortedMap().values.joinToString(separator=",").apply { println(this) }
 }
 
 data class FoodItem(val ingredients: Set<String>, val markedAllergens: Set<String>) {
