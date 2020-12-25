@@ -4,75 +4,72 @@ import java.io.File
 
 fun main() {
     part1()
+    part2()
 }
 
 fun part1() {
-    val rules = getRules()
-    while(rules.any { it.value is HigherLevelRule }) {
-        rules.forEach {
-            val rule = it.value
-            if(rule is HigherLevelRule) rules[it.key] = rule.flattenRule(rules)
+    val rules = getRuleMap().toMutableMap()
+
+    while(rules.values.any { it.contains("\\d".toRegex()) }) {
+        rules.forEach() { ruleMapEntry ->
+            "\\(\\d+\\)".toRegex().findAll(ruleMapEntry.value)
+                    .map { it.value }
+                    .forEach { foundNumber ->
+                        val intNumber = foundNumber.replace("[^\\d]".toRegex(), "").toInt()
+                        val replacement = rules[intNumber]!!.drop(1).dropLast(1)
+                        rules[ruleMapEntry.key] = ruleMapEntry.value.replace(foundNumber, "($replacement)")
+                    }
         }
     }
-    val acceptableMessages = rules.values.flatMap { (it as ConstantRule).options }
-    getMessages().filter { message ->
-        acceptableMessages.contains(message)
-    }.count().apply { println(this) }
+
+    countMatchingMessages(rules).apply{ println(this) }
 }
 
-fun getRules() = File("src/main/resources/day19_rules.txt").readLines()
-        .map { it.toRule() }
-        .associateBy { it.id }
-        .toMutableMap()
-fun getMessages() = File("src/main/resources/day19_input.txt").readLines()
+fun part2() {
+    val rules = getRuleMap().toMutableMap()
+    rules[8] = "((42)+)" //353
 
-open class Rule(val id: Int)
-class HigherLevelRule(id: Int, val options: List<List<Int>>): Rule(id) {
-    fun flattenRule(ruleMap: Map<Int, Rule>): Rule {
-        return if(canFlattenToConstant(ruleMap)) {
-            val newOptions = options.flatMap { optionList ->
-                optionList.map { optionId ->
-                    (ruleMap[optionId] as ConstantRule).options
-                }.buildOptionStrings()
-            }
-            ConstantRule(id, newOptions)
+    var rule11 = (1..100).map {
+        "((42){$it}(31){$it})"
+    }.joinToString(separator = "|", prefix="(", postfix= ")")
+    rules[11] = rule11
+
+    while(rules.values.any { it.contains("\\(\\d+\\)".toRegex()) }) {
+        rules.forEach() { ruleMapEntry ->
+            "\\(\\d+\\)".toRegex().findAll(ruleMapEntry.value)
+                    .map { it.value }
+                    .forEach { foundNumber ->
+                        val intNumber = foundNumber.replace("[()]".toRegex(), "").toInt()
+                        val replacement = rules[intNumber]!!.drop(1).dropLast(1)
+                        rules[ruleMapEntry.key] = ruleMapEntry.value.replace(foundNumber, "($replacement)")
+                    }
         }
-        else this
     }
 
-    private fun List<List<String>>.buildOptionStrings(): List<String> =
-            if(this.size == 1) this.first()
-            else this.drop(1).buildOptionStrings().flatMap { enum ->
-                this.first().map { opt ->
-                    opt + enum
+    countMatchingMessages(rules.filter { it.key == 0 }).apply{ println(this) }
+}
+
+fun getRuleMap(): Map<Int, String> =
+        File("src/main/resources/day19_rules.txt").readLines()
+                .map { it.parseRule() }
+                .toMap()
+
+fun String.parseRule(): Pair<Int, String> {
+    val split = this.split(": ")
+    var id = split[0].toInt()
+    var options = split[1].split(" | ").joinToString(separator = "|") { s ->
+        s.split(" ").joinToString(separator = "", prefix = "(", postfix = ")") { n ->
+            "(${n.replace("\"", "")})"
+        }
+    }
+    options = "\\(\\([a-zA-Z]+\\)\\)".toRegex().replace(options) { it.value.drop(2).dropLast(2) }
+    return id to "($options)"
+}
+
+
+fun countMatchingMessages(ruleMap: Map<Int, String>): Int =
+        File("src/main/resources/day19_input.txt").readLines()
+                .filter { line ->
+                    ruleMap.any { rule -> rule.value.toRegex().matches(line) }
                 }
-            }
-
-    private fun canFlattenToConstant(ruleMap: Map<Int, Rule>) = options.flatten().all { ruleMap[it] is ConstantRule }
-}
-class ConstantRule(id: Int, val options: List<String>): Rule(id)
-
-fun String.toRule(): Rule {
-    val split = split(": ")
-    return if(split[1].contains("\"")) {
-        ConstantRule(split[0].toInt(), listOf(split[1].replace("\"", "")))
-    } else {
-        HigherLevelRule(split[0].toInt(),
-                split[1].split(" | ").map { option ->
-                    option.split(" ").map { id -> id.toInt() } })
-    }
-}
-
-fun Rule.print() {
-    when (this) {
-        is HigherLevelRule -> {
-            println("$id; $options")
-        }
-        is ConstantRule -> {
-            println("$id; $options")
-        }
-        else -> {
-            error("Invalid rule type")
-        }
-    }
-}
+                .count()
