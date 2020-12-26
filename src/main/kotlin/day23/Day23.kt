@@ -1,57 +1,84 @@
 package day23
 
 fun main() {
-    test()
     part1()
+    part2()
 }
 
 fun part1() {
-    val cups = CupCircle("792845136".map { it.toString().toInt() }.toMutableList())
-    repeat(100) { move(cups) }
-    println(cups.cupsAfterOne())
+    val cupMap: Map<Int, Cup> = ("792845136" + "0")
+            .map {
+                Cup(it.toString().toInt(), null)
+            }
+            .zipWithNext()
+            .onEach { cup -> cup.first.next = cup.second }
+            .apply { this.last().first.next = this.first().first }
+            .map { it.first.label to it.first }
+            .toMap()
+    val cups = CupCircle2(cupMap, cupMap[7]!!)
+    repeat(100) { cups.crabMove() }
+    println(cups.cupsAfterOne(8))
 } //98742365
 
-fun test() {
-    val cups = CupCircle("389125467".map { it.toString().toInt() }.toMutableList())
-    repeat(10) { move(cups) }
-    println(cups.cupsAfterOne())
-} //92658374
+fun part2() {
 
-class CupCircle(private val list: MutableList<Int>, private var currentLabel: Int = list.first()) {
-    fun currentLabel(): Int = currentLabel
-    fun nextLabel() = list.elementAt((list.indexOf(currentLabel) + 1)%list.size)
-    fun grabNextLabel() = nextLabel().apply { list.remove(this) }
-    fun grabNextLabels(count: Int) = (0 until count).map { grabNextLabel() }
-    fun getNextCupAtOrBelow(targetLabel: Int): Int {
-        val label = if(targetLabel < list.minOrNull()?:0) (list.maxOrNull()?:0) else targetLabel
-        return if(label in list) label
-               else getNextCupAtOrBelow(label-1)
-    }
-    fun addAfterLabel(targetLabel: Int, newCups: List<Int>) {
-        newCups.forEachIndexed { idx, cup ->
-            list.add(list.indexOf(targetLabel)+idx+1, cup)
-        }
-    }
-    fun advanceCurrentLabel() { currentLabel = nextLabel() }
-    fun print() {
-        println("curr=$currentLabel; cups=$list")
-    }
-    fun cupsAfterOne(): String {
-        val i = list.indexOf(1)
-        return (list.slice(i+1 .. list.lastIndex)
-                + list.slice(0 until i))
-                .joinToString(separator="")
-    }
+    val cupMap: Map<Int, Cup> = ("792845136".map { it.toString().toInt() } + (10 .. 1000000).toList() + listOf(0))
+            .map {
+                Cup(it.toString().toInt(), null)
+            }
+            .zipWithNext()
+            .onEach { cup -> cup.first.next = cup.second }
+            .apply { this.last().first.next = this.first().first }
+            .map { it.first.label to it.first }
+            .toMap()
+    val cups = CupCircle2(cupMap, cupMap[7]!!)
+    repeat(10000000) { cups.crabMove() }
+    println(cups.cupsAfterOne(3))
+} //294,320,513,093
+
+data class Cup(val label: Int, var next: Cup?, var isPickedUp: Boolean = false) {
+    fun next() = next!!
 }
 
-fun move(cups: CupCircle) {
-    val pickUpCups = cups.grabNextLabels(3)
-    //println("pick: $pickUpCups")
+class CupCircle2(val labelCupMap: Map<Int, Cup>,
+                 var currentCup: Cup,
+                 private val maxLabel: Int = labelCupMap.maxOfOrNull{ it.key }?:0,
+                 private val minLabel: Int = labelCupMap.minOfOrNull{ it.key }?:0) {
 
-    val destinationCupLabel = cups.getNextCupAtOrBelow(cups.currentLabel()-1)
-    //println("dest=$destinationCupLabel")
+    fun removeNextCups(count: Int): List<Cup> = (0 until count).map {
+        val nextCups = listOf(currentCup.next(), currentCup.next().next(), currentCup.next().next().next())
+        nextCups.forEach { it.isPickedUp = true }
+        currentCup.next = nextCups.last().next
+        return nextCups
+    }
 
-    cups.addAfterLabel(destinationCupLabel, pickUpCups)
+    fun getNextCupAtOrBelow(targetLabel: Int): Cup {
+        val label = if(targetLabel < minLabel) maxLabel else targetLabel
+        return if(labelCupMap[label]!!.isPickedUp == true) getNextCupAtOrBelow(label-1)
+        else labelCupMap[label]!!
+    }
 
-    cups.advanceCurrentLabel()
+    fun addAllAfterCup(startingCup: Cup, newCups: List<Cup>) {
+        newCups.last().next = startingCup.next
+        startingCup.next = newCups.first()
+        newCups.forEach { it.isPickedUp = false }
+    }
+
+    fun cupsAfterOne(count: Int): String {
+        val cupOne = labelCupMap[1]!!
+        val cupList = mutableListOf<Cup>(cupOne.next())
+        (1 until count).forEach {
+            cupList.add(cupList.last().next())
+        }
+        return cupList.map { it.label }.joinToString()
+    }
+
+    fun crabMove() {
+        val pickUpCups = removeNextCups(3)
+        //println("pick: $pickUpCups")
+        val destinationCup = getNextCupAtOrBelow(currentCup.label-1)
+        //println("dest=$destinationCupLabel")
+        addAllAfterCup(destinationCup, pickUpCups)
+        currentCup = currentCup.next()
+    }
 }
