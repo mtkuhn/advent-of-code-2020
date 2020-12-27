@@ -1,6 +1,7 @@
 package day20
 
-class TileGrid(val gridList: Array<Array<Tile?>>) {
+class TileGrid(val gridList: Array<Array<Tile?>>,
+               val gridWidth: Int = Math.sqrt(gridList.flatten().size.toDouble()).toInt()) {
     operator fun get(x: Int, y:Int): Tile? = gridList[x][y]
     operator fun set(x: Int, y:Int, newValue: Tile) { gridList[x][y] = newValue }
 
@@ -33,13 +34,9 @@ class TileGrid(val gridList: Array<Array<Tile?>>) {
 
     fun countFilledTiles() = gridList.map { it.filterNotNull().count() }.sum()
 
-    fun getCornerIds(): List<Long> =
-            listOf((this[0,0]?.id?.toLong()?:0L),(this[0,11]?.id?.toLong()?:0L),
-                    (this[11,0]?.id?.toLong()?:0L),(this[11,11]?.id?.toLong()?:0L))
-
     fun productOfCornerIds(): Long =
-        (this[0,0]?.id?.toLong()?:0L)*(this[0,11]?.id?.toLong()?:0L)*
-                (this[11,0]?.id?.toLong()?:0L)*(this[11,11]?.id?.toLong()?:0L)
+        (this[0,0]?.id?.toLong()?:0L)*(this[0,gridWidth-1]?.id?.toLong()?:0L)*
+                (this[gridWidth-1,0]?.id?.toLong()?:0L)*(this[gridWidth-1,gridWidth-1]?.id?.toLong()?:0L)
 
     fun print() {
         println("-".repeat(133))
@@ -59,25 +56,23 @@ class TileGrid(val gridList: Array<Array<Tile?>>) {
     }
 
     fun toBigPicture(): List<String> =
-            gridList.flatMapIndexed { tileRowNum, tileRow ->
-                (0 until if(tileRowNum == gridList.lastIndex) 10 else 9).map { inTileRow -> //skip last row, except at end
-                    tileRow.mapIndexed { tileColNum, tile ->
-                        val str = tile!!.getRow(inTileRow)
-                        if(tileColNum != tileRow.lastIndex) str.dropLast(1)
-                        else str
+            gridList.flatMap { tileRow ->
+                (1 until 9).map { inTileRow -> //skip last row, except at end
+                    tileRow.map { tile ->
+                        tile!!.getRow(inTileRow).drop(1).dropLast(1)
                     }.joinToString(separator = "")
                 }
             }
 
     fun validate(tiles: List<Tile>): Boolean {
         val ids = this.gridList.flatten()
-        if(ids.size != 144) {
+        if(ids.size != gridWidth*gridWidth) {
             println("Invalid grid: Not filled. size=${ids.size}")
             return false
         }
 
         val distinctIds = ids.map { it?.id?:"x" }.distinct()
-        if(distinctIds.count() != 144) {
+        if(distinctIds.count() != gridWidth*gridWidth) {
             println("Invalid grid: Ids are not distinct. count=${distinctIds.count()}")
             return false
         }
@@ -94,7 +89,7 @@ class TileGrid(val gridList: Array<Array<Tile?>>) {
         }
 
         (0..10).forEach { row ->
-            (0..11).forEach { col ->
+            (0 until gridWidth).forEach { col ->
                 val south = this[row, col]?.getEdgeInDirection(Direction.SOUTH)
                 val north = this[row+1, col]?.getEdgeInDirection(Direction.NORTH)
                 if(south != north) {
@@ -117,9 +112,9 @@ class TileGrid(val gridList: Array<Array<Tile?>>) {
     }
 
     companion object {
-        fun emptyGrid(): TileGrid =
-                (0..11).map {
-                    arrayOfNulls<Tile>(12)
+        fun emptyGrid(width: Int): TileGrid =
+                (0 until width).map {
+                    arrayOfNulls<Tile>(width)
                 }.toTypedArray().let { TileGrid(it) }
     }
 }

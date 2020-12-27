@@ -1,5 +1,18 @@
 package day20
 
+fun main() {
+    val testA = Tile("a", """
+        12345
+        ABCDE
+        67890
+        FGHIJ
+        KLMNO
+    """.trimIndent().lines())
+
+    testA.print()
+    testA.flippedHorizontally().print()
+}
+
 data class Tile(val id: String, val grid: List<String>) {
 
     fun flippedHorizontally(): Tile = Tile(id, grid.map { it.reversed() })
